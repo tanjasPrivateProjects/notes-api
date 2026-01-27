@@ -2,6 +2,9 @@
 
 A simple REST API written in Go using the chi router. 
 This project is built step by step as a learning and portfolio project.
+The first interface is just mainly shown as a JSON in Postman.
+As a second interface we want to have a web interface.
+And last but not least, we want to build an app.
 
 ## Features
 - Health check endpoint
