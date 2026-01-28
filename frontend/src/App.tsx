@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./App.css";
+import ReactQuill from "react-quill";
 
 type Note = {
   id: number;
