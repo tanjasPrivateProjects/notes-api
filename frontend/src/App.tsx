@@ -4,7 +4,6 @@ type Note = {
   id: number;
   title: string;
   content?: string;
-  created_at: string;
 };
 
 export default function App() {
@@ -38,7 +37,7 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center px-4">
       <div className="w-full max-w-xl bg-slate-900/70 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-slate-700">
         
-        <h1 className="text-2xl font-semibold text-white mb-6 text-center">
+        <h1 className="text-3xl font-bold text-white mb-6 text-center">
           Notes App
         </h1>
 
@@ -60,7 +59,7 @@ export default function App() {
 
           <button
             onClick={addNote}
-            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 rounded-lg font-medium hover:opacity-90 transition"
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 rounded-lg font-semibold hover:opacity-90 transition"
           >
             Add Note
           </button>
@@ -71,7 +70,7 @@ export default function App() {
           {notes.map(note => (
             <div
               key={note.id}
-              className="bg-slate-800/80 rounded-lg p-4 border border-slate-700"
+              className="bg-slate-800/80 rounded-xl p-4 border border-slate-700"
             >
               <h2 className="text-white font-semibold">{note.title}</h2>
               {note.content && (
