@@ -1,27 +1,28 @@
 import { useEffect, useState } from "react";
-import "./App.css";
 
 type Note = {
-  id: number; 
-  title: string; 
-  content?: string; 
-  created_at: string,
-}; 
+  id: number;
+  title: string;
+  content?: string;
+  created_at: string;
+};
 
-function App() {
+export default function App() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
   useEffect(() => {
     fetch("http://localhost:8080/notes")
-    .then(res => res.json())
-    .then(data => setNotes(data));
+      .then(res => res.json())
+      .then(setNotes);
   }, []);
 
   const addNote = async () => {
+    if (!title) return;
+
     await fetch("http://localhost:8080/notes", {
-      method: "POST", 
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, content }),
     });
@@ -34,35 +35,55 @@ function App() {
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: "2rem auto" }}>
-      <h1>Notes App</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center px-4">
+      <div className="w-full max-w-xl bg-slate-900/70 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-slate-700">
+        
+        <h1 className="text-2xl font-semibold text-white mb-6 text-center">
+          Notes App
+        </h1>
 
-      <input
-        placeholder="Title"
-        value={title}
-        onChange={e => setTitle(e.target.value)}
-        style={{ width: "100%", marginBottom: 8 }}
-      />
+        {/* Form */}
+        <div className="space-y-3 mb-6">
+          <input
+            className="w-full rounded-lg bg-slate-800 text-white px-4 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="Title"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+          />
 
-      <textarea
-        placeholder="Content"
-        value={content}
-        onChange={e => setContent(e.target.value)}
-        style={{ width: "100%", marginBottom: 8 }}
-      />
+          <textarea
+            className="w-full rounded-lg bg-slate-800 text-white px-4 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="Content"
+            value={content}
+            onChange={e => setContent(e.target.value)}
+          />
 
-      <button onClick={addNote}>Add Note</button>
+          <button
+            onClick={addNote}
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 rounded-lg font-medium hover:opacity-90 transition"
+          >
+            Add Note
+          </button>
+        </div>
 
-      <ul>
-        {notes.map(note => (
-          <li key={note.id}>
-            <strong>{note.title}</strong>
-            <div>{note.content}</div>
-          </li>
-        ))}
-      </ul>
+        {/* Notes */}
+        <div className="space-y-3">
+          {notes.map(note => (
+            <div
+              key={note.id}
+              className="bg-slate-800/80 rounded-lg p-4 border border-slate-700"
+            >
+              <h2 className="text-white font-semibold">{note.title}</h2>
+              {note.content && (
+                <p className="text-slate-300 text-sm mt-1">
+                  {note.content}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+
+      </div>
     </div>
   );
 }
-
-export default App;
