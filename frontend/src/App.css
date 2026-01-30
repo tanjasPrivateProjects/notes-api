@@ -99,3 +99,44 @@ button:hover {
   font-size: 0.9rem;
   color: #c7d2fe;
 }
+
+.toolbar {
+  display: flex; 
+  gap: 0.5rem; 
+  margin-bottom: 0.5rem;
+}
+
+.toolbar button {
+  background: #020617;
+  border: 1px solid #334155;
+  color: white;
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.toolbar button:hover {
+  background: #1e1b4b;
+}
+
+.note {
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.note:hover {
+  background: rgba(30, 41, 59, 0.95);
+  transform: translateY(-2px);
+}
+
+.note-preview {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-top: 0.3rem;
+}
+
+.note-full {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #c7d2fe;
+}
