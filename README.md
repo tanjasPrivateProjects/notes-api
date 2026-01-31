@@ -30,6 +30,11 @@ POST /notes
 # List Notes
 run locally on: "go run ./cmd/server"
 
+
+# Important Notes to Add
+write down how to start server and everything for it 
+write down commands for git start 
+
 #  Server runs on: "http://localhost:8080"
 
 Danach commit & push: 
@@ -44,3 +49,4 @@ git push
   "content":"Hello World"
 }
 <img width="954" height="706" alt="image" src="https://github.com/user-attachments/assets/aa10bfdf-8d1e-450c-b6eb-9a294b26f097" />
+
