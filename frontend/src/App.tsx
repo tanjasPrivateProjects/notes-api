@@ -8,12 +8,46 @@ type Note = {
 };
 
 const formatText = (text: string) => {
-  return text
+  let html = text;
+
+  // Bold, Italic, Underline
+  html = html
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.*?)\*/g, "<em>$1</em>")
-    .replace(/__(.*?)__/g, "<u>$1</u>")
-    .replace(/\n/g, "<br/>");
+    .replace(/__(.*?)__/g, "<u>$1</u>");
+
+  // Unordered list
+  html = html.replace(
+    /(?:^|\n)(- .*(?:\n- .*)*)/g,
+    (_, list) => {
+      const items = list
+        .trim()
+        .split("\n")
+        .map((i: string) => `<li>${i.slice(2)}</li>`)
+        .join("");
+      return `<ul>${items}</ul>`;
+    }
+  );
+
+  // Ordered list
+  html = html.replace(
+    /(?:^|\n)((?:\d+\. .*(?:\n|$))+)/g,
+    (_, list) => {
+      const items = list
+        .trim()
+        .split("\n")
+        .map((i: string) => `<li>${i.replace(/^\d+\. /, "")}</li>`)
+        .join("");
+      return `<ol>${items}</ol>`;
+    }
+  );
+
+  // Line breaks
+  html = html.replace(/\n/g, "<br/>");
+
+  return html;
 };
+
 
 export default function App() {
   const [focusedNoteId, setFocusedNoteId] = useState<number | null>(null);
@@ -81,6 +115,30 @@ export default function App() {
     }, 0);
   };
 
+  const insertBullet = (prefix: string) => {
+    const textarea = textareaRef.current; 
+    if (!textarea) return; 
+
+    const start = textarea.selectionStart;
+
+    const before = content.slice(0, start); 
+    const after = content.slice(start);
+
+    const newText = 
+      before + 
+        (before.endsWith("\n")  ||  before === "" ? "" : "\n") + 
+        prefix + 
+        after;
+
+    setContent(newText);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.selectionStart = textarea.selectionEnd = 
+        start + prefix.length + 1;
+    }, 0);
+  };
+
   return (
     <div className="app">
       <div className="card">
@@ -119,6 +177,24 @@ export default function App() {
             >
               U
             </button>
+
+            <button
+              onMouseDown={(e) => {
+                e.preventDefault();
+                insertBullet("- "); 
+              }}
+            >
+              . 
+            </button>
+
+            <button 
+              onMouseDown={(e) => {
+                e.preventDefault();
+                insertBullet("1. "); 
+              }}
+             >
+              1.   
+            </button> 
           </div>
 
           <textarea
