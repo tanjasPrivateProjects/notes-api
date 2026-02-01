@@ -139,6 +139,61 @@ export default function App() {
     }, 0);
   };
 
+  const handleEnter = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key !== "Enter") return;
+
+  const textarea = textareaRef.current;
+  if (!textarea) return;
+
+  const start = textarea.selectionStart;
+  const before = content.slice(0, start);
+  const after = content.slice(start);
+
+  const lines = before.split("\n");
+  const currentLine = lines[lines.length - 1];
+
+  // BULLET LIST
+  if (currentLine.startsWith("- ")) {
+    e.preventDefault();
+
+    // Wenn nur "- " → Liste beenden
+    if (currentLine.trim() === "-") {
+      setContent(before.slice(0, -2) + "\n" + after);
+      return;
+    }
+
+    setContent(before + "\n- " + after);
+    setTimeout(() => {
+      textarea.selectionStart = textarea.selectionEnd = start + 3;
+    }, 0);
+    return;
+  }
+
+  // ORDERED LIST
+  const match = currentLine.match(/^(\d+)\. (.*)/);
+  if (match) {
+    e.preventDefault();
+
+    const number = parseInt(match[1], 10);
+    const text = match[2];
+
+    // Wenn leer → Liste beenden
+    if (text.trim() === "") {
+      setContent(before.slice(0, -match[0].length) + "\n" + after);
+      return;
+    }
+
+    const nextNumber = number + 1;
+    setContent(before + `\n${nextNumber}. ` + after);
+
+    setTimeout(() => {
+      textarea.selectionStart = textarea.selectionEnd =
+        start + nextNumber.toString().length + 3;
+    }, 0);
+  }
+};
+
+
   return (
     <div className="app">
       <div className="card">
@@ -202,6 +257,7 @@ export default function App() {
             placeholder="Content"
             value={content}
             onChange={e => setContent(e.target.value)}
+            onKeyDown={handleEnter}
           />
 
           <button onClick={addNote}>Add Note</button>
