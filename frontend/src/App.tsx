@@ -88,6 +88,21 @@ export default function App() {
     setNotes(await res.json());
   };
 
+ const deleteNote = async (id: number) => {
+	await fetch(`http://localhost:8080/notes/${id}`, {
+		method: "DELETE",
+	});
+
+	setNotes(notes.filter(n => n.id !== id));
+
+
+  // Falls gerade offen → schließen
+  if (openNoteId === id) {
+    setOpenNoteId(null);
+  }
+};
+
+
   /* ===== FORMAT HELPERS ===== */
 
   const wrapSelection = (wrapper: string) => {
@@ -198,33 +213,47 @@ return (
           <h3 className="notes-title">Your Notes</h3>
 
           <div className="notes-scroll">
-            {notes.map(note => {
-              const isOpen = openNoteId === note.id;
+{notes.map(note => {
+  const isOpen = openNoteId === note.id;
 
-              return (
-                <div
-                  key={note.id}
-                  className={`note ${isOpen ? "note-open" : ""}`}
-                  onClick={() =>
-                    setOpenNoteId(isOpen ? null : note.id)
-                  }
-                >
-                  <div className="note-header">
-                    <h2>{note.title}</h2>
-                    <span className="chevron">{isOpen ? "▲" : "▼"}</span>
-                  </div>
+  return (
+    <div
+      key={note.id}
+      className={`note ${isOpen ? "note-open" : ""}`}
+      onClick={() => setOpenNoteId(isOpen ? null : note.id)}
+    >
+      <div className="note-header">
+        <h2>{note.title}</h2>
 
-                  {isOpen && (
-                    <div
-                      className="note-full"
-                      dangerouslySetInnerHTML={{
-                        __html: formatText(note.content || ""),
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })}
+        <div className="note-actions">
+          <button
+            className="delete-btn"
+            onClick={(e) => {
+              e.stopPropagation();   // 🔥 wichtig
+              deleteNote(note.id);
+            }}
+          >
+            ✕
+          </button>
+
+          <span className="chevron">
+            {isOpen ? "▲" : "▼"}
+          </span>
+        </div>
+      </div>
+
+      {isOpen && (
+        <div
+          className="note-full"
+          dangerouslySetInnerHTML={{
+            __html: formatText(note.content || ""),
+          }}
+        />
+      )}
+    </div>
+  );
+})}
+
           </div>
         </div>
       )}

@@ -325,3 +325,22 @@ textarea:focus {
   flex-direction: column;
   gap: 1rem;
 }
+
+.note-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.delete-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.2rem;
+}
+
+.delete-btn:hover {
+  color: #f87171;
+}

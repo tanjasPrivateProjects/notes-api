@@ -1,18 +1,19 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
-	"sync"
+	"strconv"
 	"time"
-
-	"database/sql"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+/* ================= MODELS ================= */
 
 type Note struct {
 	ID        int       `json:"id"`
@@ -26,13 +27,24 @@ type CreateNoteRequest struct {
 	Content string `json:"content"`
 }
 
-var (
-	mu     sync.Mutex
-	notes  = make([]Note, 0)
-	nextID = 1
-)
+/* ================= DB ================= */
 
 var db *sql.DB
+
+func initDB() error {
+	query := `
+	CREATE TABLE IF NOT EXISTS notes (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		title TEXT NOT NULL,
+		content TEXT,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+	`
+	_, err := db.Exec(query)
+	return err
+}
+
+/* ================= MAIN ================= */
 
 func main() {
 	var err error
@@ -49,25 +61,51 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+
+	/* ===== CORS ===== */
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-			if r.Method == "OPTIONS" {
+			if r.Method == http.MethodOptions {
 				w.WriteHeader(http.StatusOK)
 				return
 			}
+
 			next.ServeHTTP(w, r)
 		})
 	})
-	log.Println("RUNNING VERSION: notes routes should exist")
+
+	/* ================= ROUTES ================= */
 
 	// Health
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
+		w.Write([]byte("ok"))
+	})
+
+	// GET /notes
+	r.Get("/notes", func(w http.ResponseWriter, r *http.Request) {
+		rows, err := db.Query(
+			"SELECT id, title, content, created_at FROM notes ORDER BY id DESC",
+		)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		defer rows.Close()
+
+		var notes []Note
+		for rows.Next() {
+			var n Note
+			rows.Scan(&n.ID, &n.Title, &n.Content, &n.CreatedAt)
+			notes = append(notes, n)
+		}
+
+		writeJSON(w, http.StatusOK, notes)
 	})
 
 	// POST /notes
@@ -77,27 +115,23 @@ func main() {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 			return
 		}
+
 		if req.Title == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "title must not be empty"})
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "title required"})
 			return
 		}
 
-		result, err := db.Exec(
+		res, err := db.Exec(
 			"INSERT INTO notes (title, content) VALUES (?, ?)",
 			req.Title,
 			req.Content,
 		)
-
 		if err != nil {
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			return
 		}
 
-		id, err := result.LastInsertId()
-		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
-		}
+		id, _ := res.LastInsertId()
 
 		note := Note{
 			ID:      int(id),
@@ -108,47 +142,40 @@ func main() {
 		writeJSON(w, http.StatusCreated, note)
 	})
 
-	// GET /notes
-	r.Get("/notes", func(w http.ResponseWriter, r *http.Request) {
-		rows, err := db.Query(
-			"SELECT id, title, content FROM notes ORDER BY id DESC",
-		)
-
+	// DELETE /notes/{id}
+	r.Delete("/notes/{id}", func(w http.ResponseWriter, r *http.Request) {
+		idStr := chi.URLParam(r, "id")
+		id, err := strconv.Atoi(idStr)
 		if err != nil {
-			http.Error(w, err.Error(), 500)
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
 			return
 		}
-		defer rows.Close()
 
-		var notes []Note
-
-		for rows.Next() {
-			var n Note
-			rows.Scan(&n.ID, &n.Title, &n.Content)
-			notes = append(notes, n)
+		res, err := db.Exec("DELETE FROM notes WHERE id = ?", id)
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
 		}
 
-		writeJSON(w, http.StatusOK, notes)
+		affected, _ := res.RowsAffected()
+		if affected == 0 {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "note not found"})
+			return
+		}
+
+		writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 	})
+
+	/* ================= START ================= */
 
 	log.Println("Server läuft auf http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
+/* ================= HELPERS ================= */
+
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
-func initDB() error {
-	query := `CREATE BTABLE IF NOT EXISTS notes ( 
-	id INTEGER PRIMARY KEY AUTOINCREMENT, 
-	title TEXT NOT NULL, 
-	content TEXT, 
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	);`
-
-	_, err := db.Exec(query)
-	return err
+	json.NewEncoder(w).Encode(v)
 }
