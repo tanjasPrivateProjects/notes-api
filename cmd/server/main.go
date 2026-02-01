@@ -7,8 +7,11 @@ import (
 	"sync"
 	"time"
 
+	"database/sql"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Note struct {
@@ -29,7 +32,20 @@ var (
 	nextID = 1
 )
 
+var db *sql.DB
+
 func main() {
+	var err error
+
+	db, err = sql.Open("sqlite3", "./notes.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := initDB(); err != nil {
+		log.Fatal(err)
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -66,28 +82,53 @@ func main() {
 			return
 		}
 
-		mu.Lock()
-		note := Note{
-			ID:        nextID,
-			Title:     req.Title,
-			Content:   req.Content,
-			CreatedAt: time.Now().UTC(),
+		result, err := db.Exec(
+			"INSERT INTO notes (title, content) VALUES (?, ?)",
+			req.Title,
+			req.Content,
+		)
+
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
 		}
-		nextID++
-		notes = append(notes, note)
-		mu.Unlock()
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+
+		note := Note{
+			ID:      int(id),
+			Title:   req.Title,
+			Content: req.Content,
+		}
 
 		writeJSON(w, http.StatusCreated, note)
 	})
 
 	// GET /notes
 	r.Get("/notes", func(w http.ResponseWriter, r *http.Request) {
-		mu.Lock()
-		out := make([]Note, len(notes))
-		copy(out, notes)
-		mu.Unlock()
+		rows, err := db.Query(
+			"SELECT id, title, content FROM notes ORDER BY id DESC",
+		)
 
-		writeJSON(w, http.StatusOK, out)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		defer rows.Close()
+
+		var notes []Note
+
+		for rows.Next() {
+			var n Note
+			rows.Scan(&n.ID, &n.Title, &n.Content)
+			notes = append(notes, n)
+		}
+
+		writeJSON(w, http.StatusOK, notes)
 	})
 
 	log.Println("Server läuft auf http://localhost:8080")
@@ -98,4 +139,16 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(v)
+}
+
+func initDB() error {
+	query := `CREATE BTABLE IF NOT EXISTS notes ( 
+	id INTEGER PRIMARY KEY AUTOINCREMENT, 
+	title TEXT NOT NULL, 
+	content TEXT, 
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);`
+
+	_, err := db.Exec(query)
+	return err
 }
