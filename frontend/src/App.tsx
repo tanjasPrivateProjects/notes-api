@@ -7,16 +7,16 @@ type Note = {
   content?: string;
 };
 
+/* ================= TEXT FORMAT ================= */
+
 const formatText = (text: string) => {
   let html = text;
 
-  // Bold, Italic, Underline
   html = html
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.*?)\*/g, "<em>$1</em>")
     .replace(/__(.*?)__/g, "<u>$1</u>");
 
-  // Unordered list
   html = html.replace(
     /(?:^|\n)(- .*(?:\n- .*)*)/g,
     (_, list) => {
@@ -29,7 +29,6 @@ const formatText = (text: string) => {
     }
   );
 
-  // Ordered list
   html = html.replace(
     /(?:^|\n)((?:\d+\. .*(?:\n|$))+)/g,
     (_, list) => {
@@ -42,15 +41,13 @@ const formatText = (text: string) => {
     }
   );
 
-  // Line breaks
   html = html.replace(/\n/g, "<br/>");
-
   return html;
 };
 
+/* ================= APP ================= */
 
 export default function App() {
-  const [focusedNoteId, setFocusedNoteId] = useState<number | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [openNoteId, setOpenNoteId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
@@ -58,23 +55,23 @@ export default function App() {
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
+  /* ===== FETCH ===== */
   useEffect(() => {
     fetch("http://localhost:8080/notes")
       .then(res => res.json())
       .then(setNotes);
   }, []);
 
-    useEffect(() => {
+  /* ===== ESC CLOSE ===== */
+  useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setFocusedNoteId(null);
-        setOpenNoteId(null);
-      }
+      if (e.key === "Escape") setOpenNoteId(null);
     };
-
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+
+  /* ===== ADD NOTE ===== */
   const addNote = async () => {
     if (!title) return;
 
@@ -91,6 +88,8 @@ export default function App() {
     setNotes(await res.json());
   };
 
+  /* ===== FORMAT HELPERS ===== */
+
   const wrapSelection = (wrapper: string) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -98,15 +97,13 @@ export default function App() {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
 
-    const selectedText = content.slice(start, end);
-    const newText =
+    setContent(
       content.slice(0, start) +
-      wrapper +
-      selectedText +
-      wrapper +
-      content.slice(end);
-
-    setContent(newText);
+        wrapper +
+        content.slice(start, end) +
+        wrapper +
+        content.slice(end)
+    );
 
     setTimeout(() => {
       textarea.focus();
@@ -116,90 +113,58 @@ export default function App() {
   };
 
   const insertBullet = (prefix: string) => {
-    const textarea = textareaRef.current; 
-    if (!textarea) return; 
+    const textarea = textareaRef.current;
+    if (!textarea) return;
 
     const start = textarea.selectionStart;
-
-    const before = content.slice(0, start); 
+    const before = content.slice(0, start);
     const after = content.slice(start);
 
-    const newText = 
-      before + 
-        (before.endsWith("\n")  ||  before === "" ? "" : "\n") + 
-        prefix + 
-        after;
-
-    setContent(newText);
-
-    setTimeout(() => {
-      textarea.focus();
-      textarea.selectionStart = textarea.selectionEnd = 
-        start + prefix.length + 1;
-    }, 0);
+    setContent(
+      before +
+        (before.endsWith("\n") || before === "" ? "" : "\n") +
+        prefix +
+        after
+    );
   };
 
   const handleEnter = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-  if (e.key !== "Enter") return;
+    if (e.key !== "Enter") return;
 
-  const textarea = textareaRef.current;
-  if (!textarea) return;
+    const textarea = textareaRef.current;
+    if (!textarea) return;
 
-  const start = textarea.selectionStart;
-  const before = content.slice(0, start);
-  const after = content.slice(start);
+    const start = textarea.selectionStart;
+    const before = content.slice(0, start);
+    const after = content.slice(start);
 
-  const lines = before.split("\n");
-  const currentLine = lines[lines.length - 1];
+    const lines = before.split("\n");
+    const currentLine = lines[lines.length - 1];
 
-  // BULLET LIST
-  if (currentLine.startsWith("- ")) {
-    e.preventDefault();
-
-    // Wenn nur "- " → Liste beenden
-    if (currentLine.trim() === "-") {
-      setContent(before.slice(0, -2) + "\n" + after);
+    if (currentLine.startsWith("- ")) {
+      e.preventDefault();
+      setContent(before + "\n- " + after);
       return;
     }
 
-    setContent(before + "\n- " + after);
-    setTimeout(() => {
-      textarea.selectionStart = textarea.selectionEnd = start + 3;
-    }, 0);
-    return;
-  }
-
-  // ORDERED LIST
-  const match = currentLine.match(/^(\d+)\. (.*)/);
-  if (match) {
-    e.preventDefault();
-
-    const number = parseInt(match[1], 10);
-    const text = match[2];
-
-    // Wenn leer → Liste beenden
-    if (text.trim() === "") {
-      setContent(before.slice(0, -match[0].length) + "\n" + after);
-      return;
+    const match = currentLine.match(/^(\d+)\. /);
+    if (match) {
+      e.preventDefault();
+      const next = parseInt(match[1]) + 1;
+      setContent(before + `\n${next}. ` + after);
     }
+  };
 
-    const nextNumber = number + 1;
-    setContent(before + `\n${nextNumber}. ` + after);
+  /* ================= RENDER ================= */
 
-    setTimeout(() => {
-      textarea.selectionStart = textarea.selectionEnd =
-        start + nextNumber.toString().length + 3;
-    }, 0);
-  }
-};
+return (
+  <div className="app">
+    <div className="layout">
 
-
-  return (
-    <div className="app">
-      <div className="card">
+      {/* ===== EDITOR ===== */}
+      <div className="card editor-card">
         <h1>Notes App</h1>
 
-        {/* ===== EDITOR ===== */}
         <div className="editor">
           <input
             placeholder="Title"
@@ -208,48 +173,11 @@ export default function App() {
           />
 
           <div className="toolbar">
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                wrapSelection("**");
-              }}
-            >
-              B
-            </button>
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                wrapSelection("*");
-              }}
-            >
-              I
-            </button>
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                wrapSelection("__");
-              }}
-            >
-              U
-            </button>
-
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                insertBullet("- "); 
-              }}
-            >
-              . 
-            </button>
-
-            <button 
-              onMouseDown={(e) => {
-                e.preventDefault();
-                insertBullet("1. "); 
-              }}
-             >
-              1.   
-            </button> 
+            <button onMouseDown={e => { e.preventDefault(); wrapSelection("**"); }}>B</button>
+            <button onMouseDown={e => { e.preventDefault(); wrapSelection("*"); }}>I</button>
+            <button onMouseDown={e => { e.preventDefault(); wrapSelection("__"); }}>U</button>
+            <button onMouseDown={e => { e.preventDefault(); insertBullet("- "); }}>•</button>
+            <button onMouseDown={e => { e.preventDefault(); insertBullet("1. "); }}>1.</button>
           </div>
 
           <textarea
@@ -262,35 +190,28 @@ export default function App() {
 
           <button onClick={addNote}>Add Note</button>
         </div>
+      </div>
 
-        {/* ===== STAGE ===== */}
-        {notes.length > 0 && (
-          <div className={`notes-stage ${focusedNoteId ? "stage-dimmed" : ""}`} 
-            onClick={() => { 
-              setFocusedNoteId(null); 
-              setOpenNoteId(null);
-            }}
-          >
-            <h3 className="notes-title">Your Notes</h3>
+      {/* ===== NOTES ===== */}
+      {notes.length > 0 && (
+        <div className="notes-stage">
+          <h3 className="notes-title">Your Notes</h3>
 
+          <div className="notes-scroll">
             {notes.map(note => {
               const isOpen = openNoteId === note.id;
 
               return (
                 <div
                   key={note.id}
-                  className={`note ${isOpen ? "note-open" : ""} ${focusedNoteId === note.id ? "note-focus" : ""}`}
-                  onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenNoteId(isOpen ? null : note.id);
-                      setFocusedNoteId(isOpen ? null : note.id);
-                  }}
+                  className={`note ${isOpen ? "note-open" : ""}`}
+                  onClick={() =>
+                    setOpenNoteId(isOpen ? null : note.id)
+                  }
                 >
                   <div className="note-header">
                     <h2>{note.title}</h2>
-                    <span className="chevron">
-                      {isOpen ? "▲" : "▼"}
-                    </span>
+                    <span className="chevron">{isOpen ? "▲" : "▼"}</span>
                   </div>
 
                   {isOpen && (
@@ -305,8 +226,10 @@ export default function App() {
               );
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
     </div>
-  );
+  </div>
+);
 }

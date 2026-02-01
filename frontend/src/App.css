@@ -15,10 +15,12 @@ body {
 .app {
   min-height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 1rem;
+  align-items: center;   
+  padding: 2rem;
 }
+
+
 
 /* ===== MAIN CARD ===== */
 .card {
@@ -254,4 +256,72 @@ textarea:focus {
 
 .note-full li {
   margin-bottom: 0.3rem;
+}
+
+
+/* ================= EDITOR ================= */
+
+.editor-card {
+  z-index: 2;
+}
+
+/* ================= NOTES STAGE ================= */
+
+.notes-stage {
+  margin-top: 3rem;              /* ← DAS gibt Luft */
+  width: 100%;
+  max-width: 520px;
+  padding: 1.5rem;
+
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(18px);
+
+  border-radius: 26px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
+}
+
+
+/* Scrollbar nice */
+.notes-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.notes-scroll::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.5);
+  border-radius: 10px;
+}
+
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(420px, 520px) minmax(360px, 420px);
+  gap: 3rem;
+
+  align-items: center; 
+}
+
+
+
+/* NOTES PANEL */
+.notes-panel {
+  max-height: 520px;
+  display: flex;
+  flex-direction: column;
+
+  background: rgba(15, 23, 42, 0.65);
+  border-radius: 22px;
+  padding: 1.5rem;
+
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  backdrop-filter: blur(18px);
+}
+
+/* SCROLL */
+.notes-scroll {
+  margin-top: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
