@@ -7,8 +7,10 @@ type Note = {
   content?: string;
 };
 
-/* ================= TEXT FORMAT ================= */
+/*  TEXT FORMAT  */
 
+// formatText converts lightweight markdown-like syntax into HTML can be rendered inside a note
+// supported: bold, italic, underline, unordered lists, ordered list
 const formatText = (text: string) => {
   let html = text;
 
@@ -45,7 +47,7 @@ const formatText = (text: string) => {
   return html;
 };
 
-/* ================= APP ================= */
+/*  APP  */
 
 export default function App() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -55,14 +57,15 @@ export default function App() {
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  /* ===== FETCH ===== */
+  /*  FETCH  */
+    // load notes on intial render
   useEffect(() => {
     fetch("http://localhost:8080/notes")
       .then(res => res.json())
       .then(setNotes);
   }, []);
 
-  /* ===== ESC CLOSE ===== */
+  /*  ESC CLOSE  */
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpenNoteId(null);
@@ -71,7 +74,8 @@ export default function App() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  /* ===== ADD NOTE ===== */
+  /*  ADD NOTE  */
+  // create new note
   const addNote = async () => {
     if (!title) return;
 
@@ -95,15 +99,13 @@ export default function App() {
 
 	setNotes(notes.filter(n => n.id !== id));
 
-
-  // Falls gerade offen → schließen
   if (openNoteId === id) {
     setOpenNoteId(null);
   }
 };
 
 
-  /* ===== FORMAT HELPERS ===== */
+  /*  FORMAT HELPERS  */
 
   const wrapSelection = (wrapper: string) => {
     const textarea = textareaRef.current;
@@ -170,13 +172,13 @@ export default function App() {
     }
   };
 
-  /* ================= RENDER ================= */
+  /*  RENDER  */
 
 return (
   <div className="app">
     <div className="layout">
 
-      {/* ===== EDITOR ===== */}
+      {/*  EDITOR  */}
       <div className="card editor-card">
         <h1>Notes App</h1>
 
@@ -207,7 +209,7 @@ return (
         </div>
       </div>
 
-      {/* ===== NOTES ===== */}
+      {/*  NOTES  */}
       {notes.length > 0 && (
         <div className="notes-stage">
           <h3 className="notes-title">Your Notes</h3>
@@ -229,7 +231,7 @@ return (
           <button
             className="delete-btn"
             onClick={(e) => {
-              e.stopPropagation();   // 🔥 wichtig
+              e.stopPropagation();  
               deleteNote(note.id);
             }}
           >

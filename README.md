@@ -1,52 +1,85 @@
-# Notes API 
+# Notes API & Web App 
 
-A simple REST API written in Go using the chi router. 
-This project is built step by step as a learning and portfolio project.
-The first interface is just mainly shown as a JSON in Postman.
-As a second interface we want to have a web interface.
-And last but not least, we want to build an app.
+A simple full-stack notes application built as a **learning and portfolio project** 
 
-## Features
-- Health check endpoint
-- Create Notes
-- List Notes
-- In-Memory storage (SQLite planned)
+The project starts with REST API written in Go and is gradually extended with: 
+- a web frontend 
+- persistent storage (SQLite)
+- basic CRUD functionality 
+
+The goal is to understand **backend fundamentals, REST APIs, frontend intergration, and full-stack workflows**
+
+--- 
+
+## Features 
+
+### Backend (Go)
+- Health check endpoint 
+- create notes 
+- list notes 
+- delete notes 
+- SQLlite database for persistent storage
+- CORS-enabled API for frontend usage
+
+### Frontend (React)
+- create notes with title and content
+- rich-text-lik formatting (bold, italic, underline, lists)
+- expandable note view 
+- delete notes 
+- scrollable notes list 
+- clean, modern UI
+
+--- 
 
 ## Tech Stack
-- Go
-- chi router
+
+### Backend
+- **Go**
+- **chi router**
+- **SQLite**
 - REST / JSON
 
-## Endpoints
+### Frontend
+- **React**
+- **TypeScript**
+- **CSS (custom styling)**
+- Fetch API
 
-### Health 
+## API Endpoints 
+
+### Health Check 
+http
 GET /health
 
-Response: ok
+# Response 
+- ok 
 
-### create Note
-POST /notes
+# Create Note 
+- POST /notes 
 
 # List Notes
-run locally on: "go run ./cmd/server"
+- GET /notes 
+retuns all notes ordered by newest first
 
+# Delete Note 
+- DELETE /notes/{id}
+deletes a note by its ID
 
-# Important Notes to Add
-write down how to start server and everything for it 
-write down commands for git start 
+# Getting Started 
+1. clone the repository 
+git clone https://github.com/<tanjaprivateprojects>/<notes-api>.git 
+cd <notes-api>
 
-#  Server runs on: "http://localhost:8080"
+2. Start the Backend 
+Make sure you have Go installed 
+  go run main.go 
 
-Danach commit & push: 
-```bash
-git add README.md
-git commit -m "Add README"
-git push
+The server will start on: 
+  http://localhost:8080
 
-```json
-{
-  "title":"My first note",
-  "content":"Hello World"
-}
-<img width="954" height="706" alt="image" src="https://github.com/user-attachments/assets/aa10bfdf-8d1e-450c-b6eb-9a294b26f097" />
-
+3. Start the Frontend
+navigating to the frontend folder: 
+  npm install 
+  npm run dev
+Frontend runs on: 
+  http://localhost:5173

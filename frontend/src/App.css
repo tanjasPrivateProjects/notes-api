@@ -1,4 +1,4 @@
-/* ===== RESET ===== */
+/*  RESET  */
 * {
   box-sizing: border-box;
 }
@@ -11,7 +11,7 @@ body {
   color: white;
 }
 
-/* ===== LAYOUT ===== */
+/*  LAYOUT  */
 .app {
   min-height: 100vh;
   display: flex;
@@ -22,7 +22,7 @@ body {
 
 
 
-/* ===== MAIN CARD ===== */
+/*  MAIN CARD */
 .card {
   width: 100%;
   max-width: 520px;
@@ -40,7 +40,7 @@ body {
   font-size: 1.8rem;
 }
 
-/* ===== EDITOR ===== */
+/*  EDITOR  */
 .editor {
   display: flex;
   flex-direction: column;
@@ -69,7 +69,7 @@ textarea:focus {
   border-color: #6366f1;
 }
 
-/* ===== TOOLBAR ===== */
+/*  TOOLBAR  */
 .toolbar {
   display: flex;
   gap: 0.5rem;
@@ -90,7 +90,7 @@ textarea:focus {
   background: #1e1b4b;
 }
 
-/* ===== PRIMARY BUTTON ===== */
+/* PRIMARY BUTTON  */
 .editor button {
   margin-top: 0.3rem;
   background: linear-gradient(to right, #6366f1, #8b5cf6);
@@ -107,7 +107,7 @@ textarea:focus {
   opacity: 0.9;
 }
 
-/* ===== NOTES STAGE ===== */
+/*  NOTES STAGE  */
 .notes-stage {
   margin-top: 2.5rem;
   display: grid;
@@ -158,7 +158,7 @@ textarea:focus {
   border-color: rgba(139, 92, 246, 0.6);
 }
 
-/* ===== NOTE HEADER ===== */
+/*  NOTE HEADER  */
 .note-header {
   display: flex;
   justify-content: space-between;
@@ -172,7 +172,7 @@ textarea:focus {
   color: #e5e7eb;
 }
 
-/* ===== CHEVRON ===== */
+/*  CHEVRON  */
 .chevron {
   font-size: 0.7rem;
   color: #94a3b8;
@@ -211,7 +211,7 @@ textarea:focus {
   }
 }
 
-/* ===== FOCUS MODE ===== */
+/*  FOCUS MODE  */
 
 /* Bühne dimmen */
 .stage-dimmed .note:not(.note-focus) {
@@ -259,16 +259,16 @@ textarea:focus {
 }
 
 
-/* ================= EDITOR ================= */
+/*  EDITOR  */
 
 .editor-card {
   z-index: 2;
 }
 
-/* ================= NOTES STAGE ================= */
+/*  NOTES STAGE  */
 
 .notes-stage {
-  margin-top: 3rem;              /* ← DAS gibt Luft */
+  margin-top: 3rem;              
   width: 100%;
   max-width: 520px;
   padding: 1.5rem;

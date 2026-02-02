@@ -13,7 +13,10 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-/* ================= MODELS ================= */
+/*
+	Models - note represents a singe note entity stored in the database
+	and exchanged via the HTTP API
+*/
 
 type Note struct {
 	ID        int       `json:"id"`
@@ -27,10 +30,12 @@ type CreateNoteRequest struct {
 	Content string `json:"content"`
 }
 
-/* ================= DB ================= */
+// global database handel (shared across handlers)
 
 var db *sql.DB
 
+// ensures required database schema exists
+// safe to call on every startup
 func initDB() error {
 	query := `
 	CREATE TABLE IF NOT EXISTS notes (
@@ -44,16 +49,18 @@ func initDB() error {
 	return err
 }
 
-/* ================= MAIN ================= */
+// MAIN
 
 func main() {
 	var err error
 
+	// open SQLite database file
 	db, err = sql.Open("sqlite3", "./notes.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// initializes database schema
 	if err := initDB(); err != nil {
 		log.Fatal(err)
 	}
@@ -62,7 +69,8 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	/* ===== CORS ===== */
+	/*  CORS Middleware */
+	// allows frontend (vite on localhost:5173) to access this API
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -79,7 +87,7 @@ func main() {
 		})
 	})
 
-	/* ================= ROUTES ================= */
+	/*  ROUTES  */
 
 	// Health
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -166,13 +174,13 @@ func main() {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 	})
 
-	/* ================= START ================= */
+	/*  START  */
 
 	log.Println("Server läuft auf http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
-/* ================= HELPERS ================= */
+/*  HELPERS  */
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
